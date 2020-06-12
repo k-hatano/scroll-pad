@@ -1,0 +1,39 @@
+
+body.popup {
+	background-color: #888;
+	height: 256px;
+	width: 256px;
+	margin: 0px;
+}
+
+.mode-selector button {
+	width: 50%;
+}
+
+.pad {
+	position: relative;
+	height: 256px;
+	width: 256px;
+}
+
+.pad-canvas {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	height: 256px;
+	width: 256px;
+}
+
+.pad-div {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	height: 256px;
+	width: 256px;
+	z-index: 2;
+}
+
+.speed-slider {
+	margin: 8px;
+	width: 240px;
+}
