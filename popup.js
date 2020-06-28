@@ -11,18 +11,26 @@ let chiralRadius = 0.0;
 let scrollSpeed = 8;
 let isChiral = false;
 let isDragging = false;
+let isHolding = false;
 let directionIndex = 0;
 
 window.onload = function() {
 	document.getElementById('pad-div').addEventListener('mousemove', onMoveOnPad);
 	document.getElementById('pad-div').addEventListener('mousedown', onDragStartOnPad);
 	document.getElementById('pad-div').addEventListener('mouseup', onDragEndOnPad);
+	document.getElementById('pad-div').addEventListener('mouseout', onExitFromPad);
+	document.getElementById('pad-div').addEventListener('contextmenu', onContextMenuOnPad);
 
-	document.getElementById('speed-slider').addEventListener('change', onChangeSpeed);
+	document.getElementById('speed-slider').addEventListener('input', onChangeSpeed);
 	document.getElementById('slide').addEventListener('click', onClickSlide);
 	document.getElementById('chiral').addEventListener('click', onClickChiral);
 
 	drawCanvas();
+}
+
+function onContextMenuOnPad(event) {
+	event.preventDefault();
+	return false;
 }
 
 function onMoveOnPad(event) {
@@ -50,7 +58,6 @@ function onMoveOnPad(event) {
 				x = (lastX - event.offsetX) * scrollSpeed;
 				y = (lastY - event.offsetY) * scrollSpeed;
 			}
-			drawCanvas();
 
 			chrome.tabs.sendMessage(tabs[0].id, {
 				name: "scroll",
@@ -59,6 +66,7 @@ function onMoveOnPad(event) {
 			}, function(response) {
 				lastX = event.offsetX;
 				lastY = event.offsetY;
+				drawCanvas();
 			});
 		});
 		return;
@@ -87,6 +95,22 @@ function onDragStartOnPad(event) {
 }
 
 function onDragEndOnPad(event) {
+	if (event.button == 1 || event.button == 2) {
+		if (isHolding) {
+			isHolding = false;
+			isDragging = false;
+		} else {
+			isHolding = true;
+		}
+	} else {
+		isDragging = false;
+	}
+	chiralRadius = 0.0;
+	drawCanvas();
+}
+
+function onExitFromPad(event) {
+	isHolding = false;
 	isDragging = false;
 	chiralRadius = 0.0;
 	drawCanvas();
@@ -94,6 +118,7 @@ function onDragEndOnPad(event) {
 
 function onChangeSpeed(event) {
 	scrollSpeed = parseInt(this.value);
+	drawCanvas();
 }
 
 function onClickSlide(event) {
@@ -118,20 +143,31 @@ function drawCanvas() {
 	ctx.fillRect(0, 0, width, height);
 
 	if (isChiral) {
+		// 大円
 	    if (isDragging) {
-	    	ctx.fillStyle = '#B0B0B0';
-	    } else {
 	    	ctx.fillStyle = '#AAA';
+	    } else {
+	    	ctx.fillStyle = '#B0B0B0';
 	    }
 		ctx.beginPath();
 	    ctx.arc(128, 128, 112, Math.PI * 2, false);
 	    ctx.fill();
 
+	    // 小円
 	    ctx.fillStyle = '#888';
 	    ctx.beginPath();
 	    ctx.arc(128, 128, 32, Math.PI * 2, false);
 	    ctx.fill();
 
+	    // ドラッグスポット
+		if (isDragging) {
+			ctx.fillStyle = '#777';
+		    ctx.beginPath();
+		    ctx.arc(lastX, lastY, 6, Math.PI * 2, false);
+		    ctx.fill();
+		}
+
+		// クロスヘアー
 		ctx.strokeStyle = '#888';
   		ctx.lineWidth = 2;
   		for (var r = 0; r < 4; r++) {
@@ -143,6 +179,7 @@ function drawCanvas() {
 			ctx.stroke();
   		}
 
+  		// 矢印
   		if (isDragging) {
 		    ctx.strokeStyle = '#CCC';
 	  		ctx.lineWidth = 2;
@@ -150,58 +187,87 @@ function drawCanvas() {
 	  			let deltaX = directionIndex == 0 ? 1 : -1;
 
 	  			ctx.beginPath();
-			  	ctx.moveTo(128 + 72 * deltaX, 112);
-			  	ctx.lineTo(128 + 72 * deltaX, 144);
+			  	ctx.moveTo(128 + 72 * deltaX, 104);
+			  	ctx.lineTo(128 + 72 * deltaX, 152);
 
-			  	ctx.moveTo(128 + 72 * deltaX, 112);
-			  	ctx.lineTo(120 + 72 * deltaX, 120);
+			  	ctx.moveTo(140 + 72 * deltaX, 116);
+			  	ctx.lineTo(128 + 72 * deltaX, 104);
+			  	ctx.lineTo(116 + 72 * deltaX, 116);
 	 
-			  	ctx.moveTo(128 + 72 * deltaX, 112);
-			  	ctx.lineTo(136 + 72 * deltaX, 120);
-	 
-			  	ctx.moveTo(128 + 72 * deltaX, 144);
-			  	ctx.lineTo(120 + 72 * deltaX, 136);
-
-			  	ctx.moveTo(128 + 72 * deltaX, 144);
-			  	ctx.lineTo(136 + 72 * deltaX, 136);
+			  	ctx.moveTo(140 + 72 * deltaX, 140);
+			  	ctx.lineTo(128 + 72 * deltaX, 152);
+			  	ctx.lineTo(116 + 72 * deltaX, 140);
 				ctx.stroke();
 	  		} else {
 	  			let deltaY = directionIndex == 3 ? 1 : -1;
 
 	  			ctx.beginPath();
-			  	ctx.moveTo(112, 128 + 72 * deltaY);
-			  	ctx.lineTo(144, 128 + 72 * deltaY);
+			  	ctx.moveTo(104, 128 + 72 * deltaY);
+			  	ctx.lineTo(152, 128 + 72 * deltaY);
 
-			  	ctx.moveTo(112, 128 + 72 * deltaY);
-			  	ctx.lineTo(120, 120 + 72 * deltaY);
+			  	ctx.moveTo(116, 116 + 72 * deltaY);
+			  	ctx.lineTo(104, 128 + 72 * deltaY);
+			  	ctx.lineTo(116, 140 + 72 * deltaY);
 
-			  	ctx.moveTo(112, 128 + 72 * deltaY);
-			  	ctx.lineTo(120, 136 + 72 * deltaY);
-
-			  	ctx.moveTo(144, 128 + 72 * deltaY);
-			  	ctx.lineTo(136, 120 + 72 * deltaY);
-
-			  	ctx.moveTo(144, 128 + 72 * deltaY);
-			  	ctx.lineTo(136, 136 + 72 * deltaY);
+			  	ctx.moveTo(140, 140 + 72 * deltaY);
+			  	ctx.lineTo(152, 128 + 72 * deltaY);
+			  	ctx.lineTo(140, 116 + 72 * deltaY);
 				ctx.stroke();
 	  		}
   		}
-	} else {
+	}
+
+	if (!isChiral) {
 		ctx.strokeStyle = '#AAA';
   		ctx.lineWidth = 1;
 
-		for (var x = 32; x < 256; x += 32) {
-		  	ctx.beginPath();
+  		// 右側罫線
+  		var x = 128
+  		while (x > 0) {
+  			ctx.beginPath();
 		  	ctx.moveTo(x, 0);
 			ctx.lineTo(x, 256);
 			ctx.stroke();
-		}
+			x -= 128 / scrollSpeed;
+  		}
 
-		for (var y = 32; y < 256; y += 32) {
+  		// 左側罫線
+		x = 128
+  		while (x < 256) {
+  			ctx.beginPath();
+		  	ctx.moveTo(x, 0);
+			ctx.lineTo(x, 256);
+			ctx.stroke();
+			x += 128 / scrollSpeed;
+  		}
+
+  		// 下側罫線
+		var y = 128
+  		while (y > 0) {
 		  	ctx.beginPath();
 		  	ctx.moveTo(0, y);
 			ctx.lineTo(256, y);
 			ctx.stroke();
+			y -= 128 / scrollSpeed;
+		}
+
+		// 上側罫線
+		y = 128
+  		while (y < 256) {
+		  	ctx.beginPath();
+		  	ctx.moveTo(0, y);
+			ctx.lineTo(256, y);
+			ctx.stroke();
+			y += 128 / scrollSpeed;
+		}
+
+		// ドラッグスポット
+		if (isDragging) {
+			ctx.fillStyle = '#777';
+		    ctx.beginPath();
+		    ctx.arc(lastX, lastY, 6, Math.PI * 2, false);
+		    ctx.fill();
 		}
 	}
  }
+ 
