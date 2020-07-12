@@ -12,6 +12,7 @@ let scrollSpeed = 8;
 let isChiral = false;
 let isDragging = false;
 let isHolding = false;
+let isDoubleFingers = false;
 let directionIndex = 0;
 
 window.onload = function() {
@@ -75,6 +76,9 @@ function onMoveOnPad(event) {
 
 function onDragStartOnPad(event) {
 	chiralRadius = 0;
+	if (isDragging) {
+		isDoubleFingers = true;
+	}
 	isDragging = true;
 	firstX = lastX = event.offsetX;
 	firstY = lastY = event.offsetY;
@@ -105,6 +109,7 @@ function onDragEndOnPad(event) {
 	} else {
 		isDragging = false;
 	}
+	isDoubleFingers = false;
 	chiralRadius = 0.0;
 	drawCanvas();
 }
@@ -165,6 +170,13 @@ function drawCanvas() {
 		    ctx.beginPath();
 		    ctx.arc(lastX, lastY, 6, Math.PI * 2, false);
 		    ctx.fill();
+
+		    if (isDoubleFingers) {
+		    	ctx.fillStyle = '#777';
+			    ctx.beginPath();
+			    ctx.arc((128 - lastX) + 128, (128 - lastY) + 128, 6, Math.PI * 2, false);
+			    ctx.fill();
+		    }
 		}
 
 		// クロスヘアー
@@ -267,6 +279,13 @@ function drawCanvas() {
 		    ctx.beginPath();
 		    ctx.arc(lastX, lastY, 6, Math.PI * 2, false);
 		    ctx.fill();
+
+		    if (isDoubleFingers) {
+		    	ctx.fillStyle = '#777';
+			    ctx.beginPath();
+			    ctx.arc((128 - lastX) + 128, (128 - lastY) + 128, 6, Math.PI * 2, false);
+			    ctx.fill();
+		    }
 		}
 	}
  }
